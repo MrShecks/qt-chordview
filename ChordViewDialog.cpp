@@ -24,9 +24,11 @@
 #include "ChordViewDialog.h"
 #include "ui_ChordViewDialog.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ChordViewDialog::ChordViewDialog(QWidget* parent)
-    : QDialog(parent)
-    , _ui(new Ui::ChordViewDialog) {
+    : _super(parent),
+      _ui(new Ui::ChordViewDialog) {
 
     _ui->setupUi(this);
 }

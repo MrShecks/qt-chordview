@@ -21,20 +21,62 @@
  * along with %QT_PROJECT_NAME%.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef CHORDVIEW_H
-#define CHORDVIEW_H
+#ifndef _CHORDVIEW_H
+#define _CHORDVIEW_H
 
 #include <QWidget>
+#include <QString>
 
-class ChordView : public QWidget
-{
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ChordView : public QWidget {
+    typedef QWidget _super;
+
     Q_OBJECT
+    Q_PROPERTY(QString name MEMBER _name WRITE setName NOTIFY nameChanged)
+
+    static constexpr int DEFAULT_FIRST_FRET     = 0;
+    static constexpr int DEFAULT_NUM_STRINGS    = 6;
+    static constexpr int DEFAULT_NUM_FRETS      = 5;
+
 public:
-    explicit ChordView(QWidget *parent = nullptr);
+    explicit ChordView(QWidget* parent = nullptr);
+    virtual ~ChordView() = default;
+
+    const QString& name() const {
+        return _name;
+    }
+
+    void setName(const QString& name) {
+        _name = name;
+        emit nameChanged(_name);
+    }
 
 signals:
+    void nameChanged(const QString& name);
 
 public slots:
+
+protected:
+    void paintEvent(QPaintEvent* event) override;
+
+private:
+    QString _name;
+    int _firstFret;
+
+    int _numStrings;
+    int _numFrets;
+
+    void drawFretboard(QPainter& painter, const QRect& fretBoard, const QColor& foregroundColor = Qt::black, const QColor& backgroundColor = Qt::white, int penWidth = 2);
+    void drawMarker(QPainter& painer, const QRect& fretBoard, int string, int fret, const QColor& color = Qt::black);
+
+    inline int getStringSpacing(const QRect& fretBoard) const {
+        return fretBoard.width() / (_numStrings - 1);
+    }
+
+    inline int getFretSpacing(const QRect& fretBoard) const {
+        return fretBoard.height() / _numFrets;
+    }
 };
 
-#endif // CHORDVIEW_H
+#endif // _CHORDVIEW_H

@@ -13,7 +13,45 @@
   <property name="windowTitle">
    <string>Qt ChordView Widget Test</string>
   </property>
+  <widget class="ChordView" name="chordview" native="true">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>261</width>
+     <height>291</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="ChordView" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>30</y>
+     <width>191</width>
+     <height>211</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="ChordView" name="widget_2" native="true">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>30</y>
+     <width>140</width>
+     <height>180</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ChordView</class>
+   <extends>QWidget</extends>
+   <header>ChordView.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

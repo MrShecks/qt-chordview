@@ -21,10 +21,12 @@
  * along with %QT_PROJECT_NAME%.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef CHORDVIEWDIALOG_H
-#define CHORDVIEWDIALOG_H
+#ifndef _CHORDVIEWDIALOG_H
+#define _CHORDVIEWDIALOG_H
 
 #include <QDialog>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -32,7 +34,11 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class ChordViewDialog : public QDialog {
+    typedef QDialog _super;
+
     Q_OBJECT
 
 public:
@@ -43,4 +49,4 @@ private:
     Ui::ChordViewDialog* _ui;
 };
 
-#endif // CHORDVIEWDIALOG_H
+#endif // _CHORDVIEWDIALOG_H
