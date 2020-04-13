@@ -31,6 +31,28 @@ ChordViewDialog::ChordViewDialog(QWidget* parent)
       _ui(new Ui::ChordViewDialog) {
 
     _ui->setupUi(this);
+
+    _ui->chordview1->setTitle("A major");
+    _ui->chordview1->setFretMarker (4, 2);
+    _ui->chordview1->setFretMarker (3, 2);
+    _ui->chordview1->setFretMarker (2, 2);
+
+    _ui->chordview2->setTitle("C major");
+    _ui->chordview2->setFretMarker (2, 1);
+    _ui->chordview2->setFretMarker (3, 2);
+    _ui->chordview2->setFretMarker (5, 3);
+
+    _ui->chordview3->setTitle("E minor");
+    _ui->chordview3->setFretMarker (5, 2);
+    _ui->chordview3->setFretMarker (4, 2);
+
+    _ui->chordview4->setTitle("F major");
+    _ui->chordview4->setFretMarker (1, 1, QString(), Qt::white, Qt::red);
+    _ui->chordview4->setFretMarker (2, 1);
+    _ui->chordview4->setFretMarker (3, 2);
+    _ui->chordview4->setFretMarker (4, 3, QString(), Qt::white, Qt::red);
+    _ui->chordview4->setFretMarker (5, 3);
+    _ui->chordview4->setFretMarker (6, 1, QString(), Qt::white, Qt::red);
 }
 
 ChordViewDialog::~ChordViewDialog() {

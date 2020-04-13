@@ -32,70 +32,116 @@
 
 ChordView::ChordView(QWidget* parent /* = nullptr */)
     : _super(parent),
-      _firstFret(DEFAULT_FIRST_FRET),
       _numStrings(DEFAULT_NUM_STRINGS),
-      _numFrets(DEFAULT_NUM_FRETS) {
+      _numFrets(DEFAULT_NUM_FRETS),
+      _padding(DEFAULT_PADDING) {
 
 }
 
+void ChordView::setTitle(const QString& name) {
+    _title = name;
+
+    // FIXME: Should probably only invlidate the title bounding rect
+    update();
+
+    emit titleChanged(_title);
+}
+
+bool ChordView::setFretMarker(int string, int fret, const QString& text /* = QString() */,
+                              const QColor& textColor /* = Qt::white */, const QColor& markerColor /* = Qt::black */) {
+    bool result = false;
+
+    if(string >= 1 && string <= _numStrings && fret >= 1) {
+        _fretMarkers.insert(string, { text, textColor, markerColor, fret });
+        update();
+
+        result = true;
+    }
+
+    return result;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ChordView::paintEvent(QPaintEvent* event) {
     QPainter painter(this);
+    const QColor foregroundColor = palette().color(QPalette::ButtonText);
+    const QColor fretboardColor = palette().color(QPalette::AlternateBase);
+    const QRect bounds = rect().adjusted(_padding, _padding, -_padding, -_padding);
+    qreal chordBoxOffset = 0;
 
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect(), Qt::white);
+    painter.fillRect(rect(), palette().base());
 
-    const QRect fretBoard = rect().adjusted (20, 40, -20, -20);
+    if(!_title.isEmpty ()) {
+        const QRectF textBounds = drawTitle (painter, bounds, _title);
 
-    drawFretboard (painter, fretBoard, Qt::black, /* QColor(0xfe, 0xfe, 0x9c)*/ Qt::white, 2);
-    drawMarker (painter, fretBoard, 6, 1);
-    drawMarker (painter, fretBoard, 5, 1);
-    drawMarker (painter, fretBoard, 4, 2);
-    drawMarker (painter, fretBoard, 3, 3);
-    drawMarker (painter, fretBoard, 2, 3);
-    drawMarker (painter, fretBoard, 1, 1);
+        chordBoxOffset = textBounds.height() + _padding;
+    }
+
+    const QRect fretBoard = bounds.adjusted(10, chordBoxOffset, -10, 0);
+
+    drawChordBox (painter, fretBoard, foregroundColor, fretboardColor, 2);
+
+    TFretMarkerMap::const_iterator it = _fretMarkers.constBegin();
+    TFretMarkerMap::const_iterator limit = _fretMarkers.constEnd();
+
+    for(; it != limit; ++it) {
+        const FretMarker& marker = it.value();
+
+        drawFretMarker(painter, fretBoard, it.key(), marker.fret, marker.markerColor);
+    }
 
     Q_UNUSED(event)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ChordView::drawFretboard(QPainter& painter, const QRect& fretBoard, const QColor& foregroundColor /* = Qt::black */,
+QRectF ChordView::drawTitle(QPainter& painter, const QRectF& bounds, const QString& title) {
+    const QFontMetrics fm = painter.fontMetrics();
+
+    // TODO: Parse title and format any extensions/inversions etc characters using smaller subscript font (e.g A7, Amin7)
+    painter.drawText(bounds, Qt::AlignTop|Qt::AlignHCenter, title);
+
+    return fm.boundingRect(title);
+}
+
+void ChordView::drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor /* = Qt::black */,
                               const QColor& backgroundColor /* = Qt::white */, int penWidth /* = 2 */) {
-    const int stringSpacing = getStringSpacing(fretBoard);
-    const int fretSpacing = getFretSpacing(fretBoard);
+    const qreal cellSize = bounds.width() / _numStrings;
+    const qreal padding = cellSize * 0.5f;
+    const QRectF rect = QRectF(
+        bounds.left() + padding,
+        bounds.top(),
+        bounds.width() - cellSize,
+        cellSize * _numFrets
+    );
 
     painter.setPen(QPen(foregroundColor, penWidth));
-    painter.fillRect(fretBoard, backgroundColor);
+    painter.fillRect(rect, backgroundColor);
 
-    for(int strings=0; strings < _numStrings; ++strings) {
+    for(int string=0; string < _numStrings; ++string) {
         painter.drawLine(
-            fretBoard.left() + (strings * stringSpacing),
-            fretBoard.top(),
-            fretBoard.left() + (strings * stringSpacing),
-            fretBoard.bottom()
+            QPointF(rect.left() + (string * cellSize), rect.top()),
+            QPoint(rect.left() + (string * cellSize), rect.bottom())
         );
     }
 
     for(int fret=0; fret < _numFrets + 1; ++fret) {
         painter.drawLine(
-            fretBoard.left(),
-            fretBoard.top() + (fret * fretSpacing),
-            fretBoard.right(),
-            fretBoard.top() + (fret * fretSpacing)
+            QPoint(rect.left(), rect.top() + (fret * cellSize)),
+            QPoint(rect.right(), rect.top() + (fret * cellSize))
         );
     }
 }
 
-void ChordView::drawMarker(QPainter& painter, const QRect& fretBoard, int string, int fret, const QColor& color /* = Qt::black */) {
-    const int stringSpacing = getStringSpacing(fretBoard);
-    const int fretSpacing = getFretSpacing(fretBoard);
-    const int markerSize = qMin(stringSpacing, fretSpacing) * 0.70;
+void ChordView::drawFretMarker(QPainter& painter, const QRectF& bounds, int string, int fret, const QColor& color /* = Qt::black */, float markerScale /* = DEFAULT_MARKER_SCALE */) {
+    const qreal cellSize = bounds.width() / _numStrings;
+    const qreal padding = cellSize * 0.5f;
+    const qreal markerSize = cellSize * markerScale;
 
-    const QRect rc(
-        fretBoard.left() - (markerSize / 2) + ((string - 1) * stringSpacing),
-        fretBoard.top() + ((fret - 1) * fretSpacing) + ((fretSpacing - markerSize) / 2),
+    const QRectF rc(
+        bounds.left() + padding - (markerSize * 0.5f) + ((_numStrings - string) * cellSize),
+        bounds.top() + ((fret - 1) * cellSize) + ((cellSize - markerSize) * 0.5f),
         markerSize,
         markerSize
     );

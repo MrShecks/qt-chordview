@@ -26,6 +26,7 @@
 
 #include <QWidget>
 #include <QString>
+#include <QMap>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,27 +34,41 @@ class ChordView : public QWidget {
     typedef QWidget _super;
 
     Q_OBJECT
-    Q_PROPERTY(QString name MEMBER _name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString title MEMBER _title WRITE setTitle NOTIFY titleChanged)
 
     static constexpr int DEFAULT_FIRST_FRET     = 0;
     static constexpr int DEFAULT_NUM_STRINGS    = 6;
     static constexpr int DEFAULT_NUM_FRETS      = 5;
+    static constexpr int DEFAULT_PADDING        = 10;
+
+    static constexpr float DEFAULT_MARKER_SCALE = 0.65f;
+
+    struct FretMarker {
+        QString text;
+        QColor textColor;
+        QColor markerColor;
+        int fret;
+    };
+
+    typedef QMap<int, FretMarker> TFretMarkerMap;
 
 public:
+    static const int FRETTED_POSITION_NONE      = 0;
+    static const int FRETTED_POSITION_OPEN      = -1;
+    static const int FRETTED_POSITION_MUTED     = -2;
+
     explicit ChordView(QWidget* parent = nullptr);
     virtual ~ChordView() = default;
 
-    const QString& name() const {
-        return _name;
+    const QString& title() const {
+        return _title;
     }
 
-    void setName(const QString& name) {
-        _name = name;
-        emit nameChanged(_name);
-    }
+    void setTitle(const QString& name);
+    bool setFretMarker(int string, int fret, const QString& text = QString(), const QColor& textColor = Qt::white, const QColor& markerColor = Qt::black);
 
 signals:
-    void nameChanged(const QString& name);
+    void titleChanged(const QString& title);
 
 public slots:
 
@@ -61,22 +76,18 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    QString _name;
-    int _firstFret;
+    TFretMarkerMap _fretMarkers;
+    QString _title;
+
 
     int _numStrings;
     int _numFrets;
 
-    void drawFretboard(QPainter& painter, const QRect& fretBoard, const QColor& foregroundColor = Qt::black, const QColor& backgroundColor = Qt::white, int penWidth = 2);
-    void drawMarker(QPainter& painer, const QRect& fretBoard, int string, int fret, const QColor& color = Qt::black);
+    int _padding;
 
-    inline int getStringSpacing(const QRect& fretBoard) const {
-        return fretBoard.width() / (_numStrings - 1);
-    }
-
-    inline int getFretSpacing(const QRect& fretBoard) const {
-        return fretBoard.height() / _numFrets;
-    }
+    QRectF drawTitle(QPainter& painter, const QRectF& bounds, const QString& title);
+    void drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor = Qt::black, const QColor& backgroundColor = Qt::white, int penWidth = 2);
+    void drawFretMarker(QPainter& painer, const QRectF& bounds, int string, int fret, const QColor& color = Qt::black, float markerScale = DEFAULT_MARKER_SCALE);
 };
 
 #endif // _CHORDVIEW_H
