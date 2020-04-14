@@ -32,27 +32,46 @@ ChordViewDialog::ChordViewDialog(QWidget* parent)
 
     _ui->setupUi(this);
 
-    _ui->chordview1->setTitle("A major");
-    _ui->chordview1->setFretMarker (4, 2);
-    _ui->chordview1->setFretMarker (3, 2);
-    _ui->chordview1->setFretMarker (2, 2);
+    ChordView::Chord chord1("A major");
 
-    _ui->chordview2->setTitle("C major");
-    _ui->chordview2->setFretMarker (2, 1);
-    _ui->chordview2->setFretMarker (3, 2);
-    _ui->chordview2->setFretMarker (5, 3);
+    chord1.setMutedMarker(6);
+    chord1.setOpenMarker(5);
+    chord1.setMarker(4, 2);
+    chord1.setMarker(3, 2);
+    chord1.setMarker(2, 2);
+    chord1.setOpenMarker(1);
 
-    _ui->chordview3->setTitle("E minor");
-    _ui->chordview3->setFretMarker (5, 2);
-    _ui->chordview3->setFretMarker (4, 2);
+    _ui->chordview1->setChord(chord1);
 
-    _ui->chordview4->setTitle("F major");
-    _ui->chordview4->setFretMarker (1, 1, QString(), Qt::white, Qt::red);
-    _ui->chordview4->setFretMarker (2, 1);
-    _ui->chordview4->setFretMarker (3, 2);
-    _ui->chordview4->setFretMarker (4, 3, QString(), Qt::white, Qt::red);
-    _ui->chordview4->setFretMarker (5, 3);
-    _ui->chordview4->setFretMarker (6, 1, QString(), Qt::white, Qt::red);
+    ChordView::Chord chord2("C major");
+
+    chord2.setMarker(2, 1);
+    chord2.setMarker(3, 2);
+    chord2.setMarker(5, 3);
+
+    _ui->chordview2->setChord(chord2);
+
+    ChordView::Chord chord3("E minor");
+
+    chord3.setOpenMarker(6);
+    chord3.setMarker(5, 2);
+    chord3.setMarker(4, 2);
+    chord3.setOpenMarker(3);
+    chord3.setOpenMarker(2);
+    chord3.setOpenMarker(1);
+
+    _ui->chordview3->setChord(chord3);
+
+    ChordView::Chord chord4("F major");
+
+    chord4.setMarker(1, 1, Qt::red);
+    chord4.setMarker(2, 1);
+    chord4.setMarker(3, 2);
+    chord4.setMarker(4, 3, Qt::red);
+    chord4.setMarker(5, 3);
+    chord4.setMarker(6, 1, Qt::red);
+
+    _ui->chordview4->setChord(chord4);
 }
 
 ChordViewDialog::~ChordViewDialog() {
