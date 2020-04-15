@@ -52,6 +52,8 @@ void ChordView::paintEvent(QPaintEvent* event) {
         const QColor foregroundColor = palette().color(QPalette::ButtonText);
         const QColor fretboardColor = palette().color(QPalette::AlternateBase);
         const QRect bounds = rect().adjusted(_padding, _padding, -_padding, -_padding);
+        const int numStrings = _chord.stringCount();
+        const qreal spacing = bounds.width() / numStrings;
         qreal chordBoxOffset = 0;
 
         painter.setRenderHint(QPainter::Antialiasing);
@@ -63,9 +65,16 @@ void ChordView::paintEvent(QPaintEvent* event) {
             chordBoxOffset = textBounds.height() + _padding;
         }
 
-        const QRect fretBoard = bounds.adjusted(0, chordBoxOffset, 0, 0);
+        const qreal stringMarkerSize = spacing * DEFAULT_STRING_MARKER_SCALE;
 
-        drawChordBox(painter, fretBoard, foregroundColor, fretboardColor, 2);
+        const QRectF chordBoxBounds(
+            bounds.left() + spacing * 0.5f,
+            bounds.top() + chordBoxOffset + stringMarkerSize + 5,
+            bounds.width() - spacing,
+            _numFrets * spacing
+        );
+
+        drawChordBox(painter, chordBoxBounds, foregroundColor, fretboardColor, spacing, 2);
 
         const Chord::TMarkerMap& markers = _chord.getMarkers();
         Chord::TMarkerMap::const_iterator it = markers.constBegin();
@@ -74,8 +83,17 @@ void ChordView::paintEvent(QPaintEvent* event) {
         for(; it != limit; ++it) {
             const Chord::Marker& marker = it.value();
 
-            if(!(marker.isOpen () || marker.isMuted()))
-                drawFretMarker(painter, fretBoard, it.key(), marker.fret, marker.markerColor);
+            if(marker.isFretted())
+                drawFretMarker(painter, chordBoxBounds, numStrings, it.key(), marker.fret, marker.markerColor, spacing);
+            else {
+                drawStringMarker(
+                    painter,
+                    chordBoxBounds.left() + ((numStrings - it.key()) * spacing),
+                    chordBoxBounds.top() - stringMarkerSize - 5,
+                    stringMarkerSize,
+                    marker.fret
+                );
+            }
         }
     }
 
@@ -85,40 +103,31 @@ void ChordView::paintEvent(QPaintEvent* event) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 QRectF ChordView::drawTitle(QPainter& painter, const QRectF& bounds, const QString& title) {
-    const QFontMetrics fm = painter.fontMetrics();
+    QRectF textBounds;
 
     // TODO: Parse title and format any extensions/inversions etc characters using smaller subscript font (e.g A7, Amin7)
-    painter.drawText(bounds, Qt::AlignTop|Qt::AlignHCenter, title);
+    painter.drawText(bounds, Qt::AlignTop|Qt::AlignHCenter, title, &textBounds);
 
-    return fm.boundingRect(title);
+    return textBounds;
 }
 
-void ChordView::drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor /* = Qt::black */,
-                              const QColor& backgroundColor /* = Qt::white */, int penWidth /* = 2 */) {
+void ChordView::drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor, const QColor& backgroundColor, int spacing, int penWidth /* = 2 */) {
     const int numStrings = _chord.stringCount();
-    const qreal cellSize = bounds.width() / numStrings;
-    const qreal padding = cellSize * 0.5f;
-    const QRectF rect = QRectF(
-        bounds.left() + padding,
-        bounds.top(),
-        bounds.width() - cellSize,
-        cellSize * _numFrets
-    );
 
     painter.setPen(QPen(foregroundColor, penWidth));
-    painter.fillRect(rect, backgroundColor);
+    painter.fillRect(bounds, backgroundColor);
 
     for(int string=0; string < numStrings; ++string) {
         painter.drawLine(
-            QPointF(rect.left() + (string * cellSize), rect.top()),
-            QPoint(rect.left() + (string * cellSize), rect.bottom())
+            QPointF(bounds.left() + (string * spacing), bounds.top()),
+            QPoint(bounds.left() + (string * spacing), bounds.bottom())
         );
     }
 
     for(int fret=0; fret < _numFrets + 1; ++fret) {
         painter.drawLine(
-            QPoint(rect.left(), rect.top() + (fret * cellSize)),
-            QPoint(rect.right(), rect.top() + (fret * cellSize))
+            QPoint(bounds.left() + penWidth * 0.5f, bounds.top() + (fret * spacing)),
+            QPoint(bounds.right() - penWidth, bounds.top() + (fret * spacing))
         );
     }
 }
@@ -127,15 +136,26 @@ void ChordView::drawMarker(QPainter& painter, const QRectF& bounds, const Chord:
 
 }
 
-void ChordView::drawFretMarker(QPainter& painter, const QRectF& bounds, int string, int fret, const QColor& color /* = Qt::black */, float markerScale /* = DEFAULT_MARKER_SCALE */) {
-    const int numStrings = _chord.stringCount();
-    const qreal cellSize = bounds.width() / numStrings;
-    const qreal padding = cellSize * 0.5f;
-    const qreal markerSize = cellSize * markerScale;
+void ChordView::drawStringMarker(QPainter& painter, int x, int y, int size, int type) {
+    const QRectF rc(x - (size * 0.5f), y, size, size);
 
+    painter.setPen(Qt::black);
+
+    if(type == Chord::STRING_MARKER_OPEN)
+        painter.drawText(rc, Qt::AlignCenter|Qt::TextDontClip, "O");
+    else if(type == Chord::STRING_MARKER_MUTED)
+        painter.drawText(rc, Qt::AlignCenter|Qt::TextDontClip, "X");
+}
+
+void ChordView::drawFingerMarker(QPainter& painter, const QRectF& bounds, int numStrings, int string, int spacing, int finger) {
+
+}
+
+void ChordView::drawFretMarker(QPainter& painter, const QRectF& bounds, int numStrings, int string, int fret, const QColor& color, int spacing, float markerScale /* = DEFAULT_MARKER_SCALE */) {
+    const qreal markerSize = spacing * markerScale;
     const QRectF rc(
-        bounds.left() + padding - (markerSize * 0.5f) + ((numStrings - string) * cellSize),
-        bounds.top() + ((fret - 1) * cellSize) + ((cellSize - markerSize) * 0.5f),
+        bounds.left() - (markerSize * 0.5f) + ((numStrings - string) * spacing),
+        bounds.top() + ((fret - 1) * spacing) + ((spacing - markerSize) * 0.5f),
         markerSize,
         markerSize
     );
@@ -158,11 +178,11 @@ void ChordView::Chord::setMarker(int string, int fret, const QString& text, cons
 }
 
 void ChordView::Chord::setOpenMarker(int string) {
-    _markers.insert(string, { OPEN_STRING_MARKER, 0, QString(), Qt::white, Qt::black });
+    _markers.insert(string, { STRING_MARKER_OPEN, 0, QString(), Qt::white, Qt::black });
 }
 
 void ChordView::Chord::setMutedMarker(int string) {
-    _markers.insert(string, { MUTED_STRING_MARKER, 0, QString(), Qt::white, Qt::black });
+    _markers.insert(string, { STRING_MARKER_MUTED, 0, QString(), Qt::white, Qt::black });
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -45,9 +45,12 @@ ChordViewDialog::ChordViewDialog(QWidget* parent)
 
     ChordView::Chord chord2("C major");
 
-    chord2.setMarker(2, 1);
-    chord2.setMarker(3, 2);
+    chord2.setMutedMarker(6);
     chord2.setMarker(5, 3);
+    chord2.setOpenMarker(4);
+    chord2.setMarker(3, 2);
+    chord2.setMarker(2, 1);
+    chord2.setOpenMarker(1);
 
     _ui->chordview2->setChord(chord2);
 

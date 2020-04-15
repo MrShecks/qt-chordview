@@ -38,7 +38,8 @@ class ChordView : public QWidget {
     static constexpr int DEFAULT_NUM_FRETS      = 5;
     static constexpr int DEFAULT_PADDING        = 10;
 
-    static constexpr float DEFAULT_MARKER_SCALE = 0.65f;
+    static constexpr float DEFAULT_FRET_MARKER_SCALE    = 0.65f;
+    static constexpr qreal DEFAULT_STRING_MARKER_SCALE  = 0.40f;
 
 public:
 
@@ -54,14 +55,16 @@ public:
             QColor textColor;
             QColor markerColor;
 
-            bool isOpen() const     { return fret == OPEN_STRING_MARKER; }
-            bool isMuted() const    { return fret == MUTED_STRING_MARKER; }
+            bool isOpen() const     { return fret == STRING_MARKER_OPEN; }
+            bool isMuted() const    { return fret == STRING_MARKER_MUTED; }
+            bool isFretted() const  { return fret > STRING_MARKER_UNUSED; }
         };
 
         typedef QMap<int, Marker> TMarkerMap;
 
-        static const int OPEN_STRING_MARKER     = 0;
-        static const int MUTED_STRING_MARKER    = -1;
+        static const int STRING_MARKER_UNUSED   =  0;
+        static const int STRING_MARKER_OPEN     = -1;
+        static const int STRING_MARKER_MUTED    = -2;
 
         static const int DEFAULT_STRING_COUNT   = 6;
 
@@ -121,11 +124,14 @@ private:
     int _padding;
 
     QRectF drawTitle(QPainter& painter, const QRectF& bounds, const QString& title);
-    void drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor = Qt::black, const QColor& backgroundColor = Qt::white, int penWidth = 2);
+    void drawChordBox(QPainter& painter, const QRectF& bounds, const QColor& foregroundColor, const QColor& backgroundColor, int spacing, int penWidth = 2);
 
     void drawMarker(QPainter& painter, const QRectF& bounds, const Chord::Marker& marker);
+    void drawStringMarker(QPainter& painter, int x, int y, int size, int type);
 
-    void drawFretMarker(QPainter& painer, const QRectF& bounds, int string, int fret, const QColor& color = Qt::black, float markerScale = DEFAULT_MARKER_SCALE);
+    void drawFingerMarker(QPainter& painter, const QRectF& bounds, int numStrings, int string, int spacing, int finger);
+
+    void drawFretMarker(QPainter& painer, const QRectF& bounds, int numStrings, int string, int fret, const QColor& color, int spacing, float markerScale = DEFAULT_FRET_MARKER_SCALE);
 };
 
 #endif // _CHORDVIEW_H
